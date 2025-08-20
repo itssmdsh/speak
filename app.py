@@ -3,8 +3,13 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
+import os
 
 app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hand Sign Model Training API is running. Use /train to upload a CSV and get a trained model.'
 
 @app.route('/train', methods=['POST'])
 def train_model():
@@ -15,6 +20,7 @@ def train_model():
 
     # Save file to a temporary location
     csv_path = 'temp/data.csv'
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     file.save(csv_path)
 
     # Load and preprocess data
@@ -60,6 +66,7 @@ def train_model():
 
     # Save the model to a temporary file
     tflite_model_path = 'temp/hand_sign_model.tflite'
+    os.makedirs(os.path.dirname(tflite_model_path), exist_ok=True)
     with open(tflite_model_path, 'wb') as f:
         f.write(tflite_model)
 
@@ -67,4 +74,5 @@ def train_model():
     return send_file(tflite_model_path, as_attachment=True, attachment_filename='hand_sign_model.tflite')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    debug = os.getenv('DEBUG', 'False') == 'True'
+    app.run(debug=debug, host='0.0.0.0', port=5000)
